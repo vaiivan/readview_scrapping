@@ -1,0 +1,116 @@
+version: '3'
+
+services:
+    mongo:
+      image: mongo:5
+      restart: always
+      networks:
+        readview:
+          ipv4_address: 172.1.0.10
+      ports:
+        - 27017:27017
+      volumes:
+        - ./mongo:/data/db
+      
+    postgres:
+      image: "postgres:13"
+      environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: readview_books_only
+      restart: always
+      networks:
+        readview:
+          ipv4_address: 172.1.0.20
+      ports:
+            - "5432:5432"
+      volumes:
+            - ./pgdata:/var/lib/postgresql/data
+      
+    scrapper1:
+        image: "books_in_print_list_4:latest"
+        depends_on:
+          - mongo
+        networks:
+          readview:
+            ipv4_address: 172.1.0.11
+        environment:
+          - MONGO_URI=mongodb://mongodb:27017/
+        
+
+    # scrapper2:
+    #     image: "books_in_print_list_5:latest"
+    #     depends_on:
+    #       - mongo
+    #     networks:
+    #       readview:
+    #         ipv4_address: 172.1.0.12
+    #     environment:
+    #       - MONGO_URI=mongodb://mongodb:27017/
+        
+    # spark_ETL:
+    #   image: "spark_etl"
+    #   depends_on:
+    #     - spark
+    #   networks:
+    #     readview:
+    #       ipv4_address: 172.1.0.12
+
+    spark:
+      image: docker.io/bitnami/spark
+      user: root
+      networks:
+        readview:
+          ipv4_address: 172.1.0.2
+      environment:
+        - PYTHONIOENCODING=utf8
+        - SPARK_MODE=master
+        - SPARK_RPC_AUTHENTICATION_ENABLED=no
+        - SPARK_RPC_ENCRYPTION_ENABLED=no
+        - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+        - SPARK_SSL_ENABLED=no
+      ports:
+        - '8080:8080'
+        - '7077:7077'
+      # volumes: 
+      
+
+    spark-worker-1:
+      image: docker.io/bitnami/spark
+      user: root
+      networks:
+        readview:
+          ipv4_address: 172.1.0.3
+      environment:
+        - SPARK_MODE=worker
+        - SPARK_MASTER_URL=spark://spark:7077
+        - SPARK_WORKER_MEMORY=1G
+        - SPARK_WORKER_CORES=1
+        - SPARK_RPC_AUTHENTICATION_ENABLED=no
+        - SPARK_RPC_ENCRYPTION_ENABLED=no
+        - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+        - SPARK_SSL_ENABLED=no
+
+    spark-worker-2:
+      image: docker.io/bitnami/spark
+      user: root
+      networks:
+        readview:
+          ipv4_address: 172.1.0.4
+      environment:
+        - SPARK_MODE=worker
+        - SPARK_MASTER_URL=spark://spark:7077
+        - SPARK_WORKER_MEMORY=1G
+        - SPARK_WORKER_CORES=1
+        - SPARK_RPC_AUTHENTICATION_ENABLED=no
+        - SPARK_RPC_ENCRYPTION_ENABLED=no
+        - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+        - SPARK_SSL_ENABLED=no
+    
+networks:
+  readview:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.1.0.0/24

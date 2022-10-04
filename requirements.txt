@@ -1,0 +1,13 @@
+certifi==2022.6.15.1
+charset-normalizer==2.1.1
+greenlet==1.1.2
+idna==3.3
+playwright==1.25.2
+py4j==0.10.9.5
+pyee==8.1.0
+pymongo==4.2.0
+pyspark==3.3.0
+python-dotenv==0.21.0
+requests==2.28.1
+urllib3==1.26.12
+websockets==10.1

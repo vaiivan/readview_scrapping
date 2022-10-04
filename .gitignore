@@ -1,0 +1,6 @@
+mongo
+venv
+.env
+*.csv
+pgdata
+seed_file
